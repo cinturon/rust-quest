@@ -25,4 +25,9 @@ pub enum Commands {
     Verify,
     /// Show learner profile and XP
     Profile,
+    // Show basic info about a quest
+    QuestDetails {
+        /// Quest id (e.g. variables_001)
+        quest_id: String,
+    },
 }

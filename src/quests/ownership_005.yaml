@@ -1,0 +1,17 @@
+id: ownership_005
+title: "Borrow vs move"
+zone: "Forest of Ownership"
+instructions: |
+  You have a `Vec<i32>` of quest ids. Implement `first_id` that borrows the vec and returns the first element copied as `i32` (or 0 if empty).
+  In `main`, keep the vector after calling `first_id` and print both the first id and the vector length.
+xp: 20
+starter: |
+  fn first_id(ids: &Vec<i32>) -> i32 {
+      // your code here
+  }
+
+  fn main() {
+      let quests = vec![101, 202, 303];
+      // your code here
+  }
+verify: "App Compiles"

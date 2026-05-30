@@ -1,0 +1,13 @@
+id: variables_004
+title: "Integer types"
+zone: "Village of Variables"
+instructions: |
+  Store your age in a variable `age` as an `i32`.
+  Store a small bonus in `bonus` as a `u8`.
+  Print both values on one line, e.g. `age: 30, bonus: 5`.
+xp: 12
+starter: |
+  fn main() {
+      // your code here
+  }
+verify: "App Compiles"

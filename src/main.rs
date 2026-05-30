@@ -6,6 +6,8 @@ use clap::Parser;
 use cli::{Cli, Commands};
 use quest::game::{load_quest};
 
+use crate::quest::game::load_quest_pack;
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.command {
@@ -18,7 +20,14 @@ fn main() -> Result<()> {
 }
 
 fn cmd_list() -> Result<()> {
-    eprintln!("list: coming in Milestone 2");
+    let quest_pack = load_quest_pack()?;
+
+    for quest in quest_pack.quests.iter(){
+        eprintln!("id: {}", quest.id);
+        eprintln!("title: {}", quest.title);
+        eprintln!("zone: {}", quest.zone)
+    }
+
     Ok(())
 }
 

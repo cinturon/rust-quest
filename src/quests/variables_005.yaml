@@ -1,0 +1,13 @@
+id: variables_005
+title: "Shadowing"
+zone: "Village of Variables"
+instructions: |
+  Bind `spaceship` to the string `"lander"`.
+  Shadow it with a new `spaceship` holding `"orbiter"`.
+  Print only the final value (`orbiter`).
+xp: 12
+starter: |
+  fn main() {
+      // your code here
+  }
+verify: "App Compiles"

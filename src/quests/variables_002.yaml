@@ -1,0 +1,12 @@
+id: variables_002
+title: "Mutable bindings"
+zone: "Village of Variables"
+instructions: |
+  Create a mutable variable `count` starting at 0.
+  Increment it twice, then print the final value (should be 2).
+xp: 10
+starter: |
+  fn main() {
+      // your code here
+  }
+verify: "App Compiles"

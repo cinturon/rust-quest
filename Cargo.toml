@@ -1,0 +1,16 @@
+[package]
+name = "cargo-quest"
+version = "0.1.0"
+edition = "2024"
+description = "Learn Rust through small coding quests"
+readme = "README.md"
+
+[[bin]]
+name = "cargo-quest"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"

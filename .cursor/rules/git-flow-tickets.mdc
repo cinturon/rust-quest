@@ -1,0 +1,48 @@
+---
+description: Git-flow branching and ticket open/close workflow (branch, commit, merge, push)
+alwaysApply: true
+---
+
+# Git-flow and tickets
+
+Use **git-flow** with `main` (production) and `develop` (integration). Ticket work happens on **feature** branches.
+
+## Branch naming
+
+```
+feature/<ticket-id>-<short-slug>
+```
+
+Example: `feature/SAL-12-phase-4-storage`
+
+Use the real ticket id from the issue tracker (Linear, GitHub, etc.).
+
+## Opening a ticket
+
+When the user **opens** or **starts** a ticket, run this workflow (do not skip steps unless the user says otherwise):
+
+1. `git checkout develop && git pull origin develop`
+2. `git checkout -b feature/<ticket-id>-<short-slug>`
+3. Confirm the new branch with `git status`
+
+If `develop` does not exist yet, create it from `main` first and push it.
+
+## Closing a ticket
+
+When the user **closes** or **finishes** a ticket, run this workflow:
+
+1. On the feature branch: stage and **commit** remaining work. Message should reference the ticket, e.g. `SAL-12: add storage module`.
+2. `git push -u origin HEAD` (if not already pushed)
+3. `git checkout develop && git pull origin develop`
+4. `git merge --no-ff feature/<ticket-id>-<short-slug> -m "Merge branch 'feature/<ticket-id>-<short-slug>'"`
+5. `git push origin develop`
+6. `git branch -d feature/<ticket-id>-<short-slug>` (delete local feature branch after successful merge)
+
+Ask before deleting the remote feature branch or merging to `main` (releases use `release/*`; hotfixes use `hotfix/*`).
+
+## Agent behavior
+
+- Proactively offer these steps when the user mentions opening/closing a ticket, starting work, or finishing a ticket.
+- Never force-push `main` or `develop` unless the user explicitly requests it.
+- Never skip hooks (`--no-verify`) unless the user explicitly requests it.
+- Only create commits when the user is finishing a ticket or explicitly asks to commit.

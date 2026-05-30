@@ -1,0 +1,17 @@
+id: ownership_002
+title: "Immutable borrow"
+zone: "Forest of Ownership"
+instructions: |
+  Create a `String` `label` with value `"rust"`.
+  Borrow it immutably in `show_length` and print the string length.
+  After the call, print `label` again to show you still own it.
+xp: 15
+starter: |
+  fn show_length(text: &str) {
+      // your code here
+  }
+
+  fn main() {
+      // your code here
+  }
+verify: "App Compiles"

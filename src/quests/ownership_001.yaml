@@ -1,0 +1,13 @@
+id: ownership_001
+title: "Move a String"
+zone: "Forest of Ownership"
+instructions: |
+  Create a `String` named `message` with content `"quest accepted"`.
+  Move it into a second variable `banner` (do not clone).
+  Print `banner` and leave `message` unused after the move.
+xp: 15
+starter: |
+  fn main() {
+      // your code here
+  }
+verify: "App Compiles"

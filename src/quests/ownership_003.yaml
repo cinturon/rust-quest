@@ -1,0 +1,17 @@
+id: ownership_003
+title: "Mutable borrow"
+zone: "Forest of Ownership"
+instructions: |
+  Create a mutable `String` `score` starting as `"0"`.
+  Write a function `add_point` that takes `&mut String` and appends `"1"` (turn `"0"` into `"01"` for this exercise).
+  Call it once and print the final `score`.
+xp: 15
+starter: |
+  fn add_point(value: &mut String) {
+      // your code here
+  }
+
+  fn main() {
+      // your code here
+  }
+verify: "App Compiles"

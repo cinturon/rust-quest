@@ -1,0 +1,12 @@
+id: variables_003
+title: "Constants"
+zone: "Village of Variables"
+instructions: |
+  Define a constant `MAX_HEALTH` with value 100 (use `const`, not `let`).
+  Print it with a short message, e.g. `Max health: 100`.
+xp: 10
+starter: |
+  fn main() {
+      // your code here
+  }
+verify: "App Compiles"

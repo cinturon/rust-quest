@@ -1,30 +1,41 @@
+use crate::utils::util::sanitize_string;
 use anyhow::Ok;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_yaml;
-use std::path::{PathBuf};
+use std::fs::{File, create_dir_all, write};
 use std::io::BufReader;
-use std::fs::File;
+use std::path::PathBuf;
 
-const QUESTS_DIR: &str  = "./src/quests";
-
+pub const WORKSPACE_DIR: &str = "./.cargo-quest/workspace";
+const QUESTS_DIR: &str = "./src/quests";
+const WORKSPACE_CARGO_TOML: &str = r#"version = "0.1.0"
+edition = "2024"
+"#;
 
 #[derive(Serialize, Deserialize)]
-pub struct QuestPack{
-    pub quests: Vec<Quest>
+pub struct QuestPack {
+    pub quests: Vec<Quest>,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Quest{
+pub struct Quest {
     pub id: String,
     pub title: String,
     pub zone: String,
     pub instructions: String,
     pub xp: i32,
     pub starter: String,
-    pub verify: String
+    pub verify: String,
 }
 
-pub fn load_quest(quest_id: &str) -> Result<Quest, anyhow::Error>{
+#[derive(Serialize, Deserialize)]
+pub struct ActiveQuest {
+    pub title: String,
+    pub quest_id: String,
+    pub completed: bool,
+}
+
+pub fn load_quest(quest_id: &str) -> Result<Quest, anyhow::Error> {
     let path = PathBuf::from(QUESTS_DIR);
     let file = path.join(format!("{}.yaml", quest_id));
     let file = File::open(file)?;
@@ -33,31 +44,85 @@ pub fn load_quest(quest_id: &str) -> Result<Quest, anyhow::Error>{
     Ok(quest)
 }
 
-pub fn load_quest_pack() -> Result<QuestPack, anyhow::Error>{
+pub fn load_quest_pack() -> Result<QuestPack, anyhow::Error> {
     let path: PathBuf = PathBuf::from(QUESTS_DIR);
 
-
     let mut quests = Vec::new();
-    for entry in path.read_dir()?{
-        
+    for entry in path.read_dir()? {
         let path = entry?.path();
 
         // Check if entry is a file and a YAML file
-        if !path.is_file() || path.extension().and_then(|s| s.to_str()) != Some("yaml"){
+        if !path.is_file() || path.extension().and_then(|s| s.to_str()) != Some("yaml") {
             continue;
         }
 
+        // Get the quest id from the file name
         let Some(quest_id) = path.file_stem().and_then(|s| s.to_str()) else {
             continue;
         };
 
+        // Load the quest from the file
         let quest = load_quest(quest_id)?;
 
-        quests.push(quest);    
+        quests.push(quest);
     }
 
     // Sort quests by id alphabetically
-    quests.sort_by(|a,b| a.id.cmp(&b.id));
+    quests.sort_by(|a, b| a.id.cmp(&b.id));
 
     Ok(QuestPack { quests })
+}
+
+pub fn create_workspace_dir() -> Result<(), anyhow::Error> {
+    let path: PathBuf = PathBuf::from(WORKSPACE_DIR);
+
+    // Create workspace if it doesn't exist
+    if !path.exists() {
+        create_dir_all(path.join("src"))?;
+        create_dir_all(path.join("tests"))?;
+    }
+
+    Ok(())
+}
+
+pub fn create_cargo_toml(quest: &Quest) -> Result<(), anyhow::Error> {
+    let path = PathBuf::from(WORKSPACE_DIR);
+
+    let toml_file = path.join("Cargo.toml");
+
+    let cargo_toml = format!(
+        "[package]\nname = \"{}\"\n{}",
+        sanitize_string(&quest.title),
+        WORKSPACE_CARGO_TOML
+    );
+
+    write(&toml_file, cargo_toml)?;
+
+    Ok(())
+}
+
+pub fn create_main_rs(quest: &Quest) -> Result<(), anyhow::Error> {
+    let path = PathBuf::from(WORKSPACE_DIR).join("src");
+
+    let main_rs_file = path.join("main.rs");
+    write(&main_rs_file, &quest.starter)?;
+
+    Ok(())
+}
+
+pub fn create_active_json(quest: &Quest) -> Result<(), anyhow::Error> {
+    let active_json_file = PathBuf::from(WORKSPACE_DIR)
+        .parent()
+        .ok_or(anyhow::anyhow!("Failed to get parent directory"))?
+        .join("active.json");
+
+    let active = ActiveQuest {
+        title: sanitize_string(&quest.title),
+        quest_id: quest.id.clone(),
+        completed: false,
+    };
+   
+    write(&active_json_file, serde_json::to_string(&active)?)?;
+
+    Ok(())
 }

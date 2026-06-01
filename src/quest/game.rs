@@ -5,6 +5,7 @@ use serde_yaml;
 use std::fs::{File, create_dir_all, write};
 use std::io::BufReader;
 use std::path::PathBuf;
+use std::process::Command;
 
 pub const WORKSPACE_DIR: &str = "./.cargo-quest/workspace";
 const QUESTS_DIR: &str = "./src/quests";
@@ -73,6 +74,22 @@ pub fn load_quest_pack() -> Result<QuestPack, anyhow::Error> {
     Ok(QuestPack { quests })
 }
 
+pub fn load_active_quest() -> Result<Option<ActiveQuest>, anyhow::Error> {
+    let path = PathBuf::from(WORKSPACE_DIR)
+        .parent()
+        .ok_or_else(|| anyhow::anyhow!("Failed to get parent directory"))?
+        .join("active.json");
+
+    if !path.exists() {
+        return Ok(None);
+    }
+
+    let file = File::open(path)?;
+    let reader = BufReader::new(file);
+    let active_quest: ActiveQuest = serde_json::from_reader(reader)?;
+    Ok(Some(active_quest))
+}
+
 pub fn create_workspace_dir() -> Result<(), anyhow::Error> {
     let path: PathBuf = PathBuf::from(WORKSPACE_DIR);
 
@@ -125,4 +142,35 @@ pub fn create_active_json(quest: &Quest) -> Result<(), anyhow::Error> {
     write(&active_json_file, serde_json::to_string(&active)?)?;
 
     Ok(())
+}
+
+pub fn verify_workspace() -> Result<(), anyhow::Error> {
+    let workspace_dir = PathBuf::from(WORKSPACE_DIR);
+    if !workspace_dir.exists() {
+        return Err(anyhow::anyhow!("Workspace directory not found"));
+    }
+
+    if !workspace_dir.join("src").exists() {
+        return Err(anyhow::anyhow!("src directory not found"));
+    }
+
+    let cargo_toml = workspace_dir.join("Cargo.toml");
+    if !cargo_toml.exists() {
+        return Err(anyhow::anyhow!("Cargo.toml file not found"));
+    }
+
+    let main_rs_file = workspace_dir.join("src/main.rs");
+    if !main_rs_file.exists() {
+        return Err(anyhow::anyhow!("main.rs file not found"));
+    }
+    let output = Command::new("cargo")
+        .arg("check")
+        .current_dir(WORKSPACE_DIR)
+        .output()?;
+
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(anyhow::anyhow!("Verification failed: {}", String::from_utf8_lossy(&output.stderr)))?
+    }
 }

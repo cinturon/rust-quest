@@ -2,10 +2,11 @@ use crate::utils::util::sanitize_string;
 use anyhow::Ok;
 use serde::{Deserialize, Serialize};
 use serde_yaml;
+use std::collections::HashSet;
 use std::fs::{File, create_dir_all, write};
 use std::io::BufReader;
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Output};
 
 pub const WORKSPACE_DIR: &str = "./.cargo-quest/workspace";
 const QUESTS_DIR: &str = "./src/quests";
@@ -33,7 +34,14 @@ pub struct Quest {
 pub struct ActiveQuest {
     pub title: String,
     pub quest_id: String,
+    pub xp: i32,
     pub completed: bool,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Profile {
+    pub completed_quest_ids: HashSet<String>,
+    pub xp: i32,
 }
 
 pub fn load_quest(quest_id: &str) -> Result<Quest, anyhow::Error> {
@@ -136,6 +144,7 @@ pub fn create_active_json(quest: &Quest) -> Result<(), anyhow::Error> {
     let active = ActiveQuest {
         title: sanitize_string(&quest.title),
         quest_id: quest.id.clone(),
+        xp: quest.xp,
         completed: false,
     };
    
@@ -144,7 +153,76 @@ pub fn create_active_json(quest: &Quest) -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-pub fn verify_workspace() -> Result<(), anyhow::Error> {
+pub fn create_profile_json() -> Result<(), anyhow::Error> {
+    let profile_json_file = PathBuf::from(WORKSPACE_DIR)
+        .parent()
+        .ok_or(anyhow::anyhow!("Failed to get parent directory"))?
+        .join("profile.json");
+
+    if profile_json_file.exists() {
+        return Ok(());
+    }
+
+    let profile = Profile {
+        completed_quest_ids: HashSet::new(),
+        xp: 0,
+    };
+    write(&profile_json_file, serde_json::to_string(&profile)?)?;
+    Ok(())
+}
+
+pub fn save_progress_to_profile_json(active_quest: &ActiveQuest) -> Result<(), anyhow::Error> {
+    let profile_json_file = PathBuf::from(WORKSPACE_DIR)
+        .parent()
+        .ok_or(anyhow::anyhow!("Failed to get parent directory"))?
+        .join("profile.json");
+
+    if profile_json_file.exists() {
+        let mut profile: Profile =
+            serde_json::from_reader(BufReader::new(File::open(&profile_json_file)?))?;
+
+        if !profile.completed_quest_ids.contains(&active_quest.quest_id) && active_quest.completed {
+            profile.completed_quest_ids.insert(active_quest.quest_id.clone());
+            profile.xp += active_quest.xp;
+            write(&profile_json_file, serde_json::to_string(&profile)?)?;
+            return Ok(());
+        }
+        
+        Ok(())
+    } else {
+        let mut completed_quest_ids = HashSet::new();
+        completed_quest_ids.insert(active_quest.quest_id.clone());
+        let profile = Profile {
+            completed_quest_ids,
+            xp: active_quest.xp,};
+        write(&profile_json_file, serde_json::to_string(&profile)?)?;
+        Ok(())
+    }
+
+    
+    
+}
+
+pub fn save_active_json(active_quest: &ActiveQuest) -> Result<(), anyhow::Error> {
+    let active_json_file = PathBuf::from(WORKSPACE_DIR)
+        .parent()
+        .ok_or(anyhow::anyhow!("Failed to get parent directory"))?
+        .join("active.json");
+    write(&active_json_file, serde_json::to_string(&active_quest)?)?;
+    Ok(())
+}
+
+pub fn load_profile() -> Result<Profile, anyhow::Error> {
+    let profile_json_file = PathBuf::from(WORKSPACE_DIR)
+        .parent()
+        .ok_or(anyhow::anyhow!("Failed to get parent directory"))?
+        .join("profile.json");
+    let profile: Profile = serde_json::from_reader(BufReader::new(File::open(&profile_json_file)?))?;
+    Ok(profile)
+}
+
+
+pub fn verify_workspace() -> Result<Output, anyhow::Error> {
     let workspace_dir = PathBuf::from(WORKSPACE_DIR);
     if !workspace_dir.exists() {
         return Err(anyhow::anyhow!("Workspace directory not found"));
@@ -163,13 +241,24 @@ pub fn verify_workspace() -> Result<(), anyhow::Error> {
     if !main_rs_file.exists() {
         return Err(anyhow::anyhow!("main.rs file not found"));
     }
+
+    let profile_json_file = workspace_dir.parent().ok_or(anyhow::anyhow!("Failed to get parent directory"))?.join("profile.json");
+    if !profile_json_file.exists() {
+        return Err(anyhow::anyhow!("profile.json file not found"));
+    }
+
+    let active_json_file = workspace_dir.parent().ok_or(anyhow::anyhow!("Failed to get parent directory"))?.join("active.json");
+    if !active_json_file.exists() {
+        return Err(anyhow::anyhow!("active.json file not found"));
+    }
+
     let output = Command::new("cargo")
         .arg("check")
         .current_dir(WORKSPACE_DIR)
         .output()?;
 
     if output.status.success() {
-        Ok(())
+        Ok(output)
     } else {
         Err(anyhow::anyhow!("Verification failed: {}", String::from_utf8_lossy(&output.stderr)))?
     }

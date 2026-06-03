@@ -7,10 +7,9 @@ use clap::Parser;
 use cli::{Cli, Commands};
 use quest::game::{WORKSPACE_DIR, load_active_quest, load_quest, verify_workspace};
 use std::path::Path;
-use std::process::Command;
 
 use crate::quest::game::{
-    create_active_json, create_cargo_toml, create_main_rs, create_workspace_dir, load_quest_pack,
+    create_active_json, save_active_json, save_progress_to_profile_json, create_profile_json, create_cargo_toml, create_main_rs, create_workspace_dir, load_quest_pack, load_profile,
 };
 
 fn main() -> Result<()> {
@@ -77,6 +76,9 @@ fn cmd_start(quest_id: &str) -> Result<(), anyhow::Error> {
 
             // Create active.json
             create_active_json(&quest)?;
+
+            // Create profile.json
+            create_profile_json()?;
         }
     }
 
@@ -96,34 +98,50 @@ fn cmd_verify() -> Result<(), anyhow::Error> {
         anyhow::bail!("No active quest found");
     };
 
-    verify_workspace()?;
+    let mut active_quest = active_quest;
 
-    let output = Command::new("cargo")
-        .arg("check")
-        .current_dir(WORKSPACE_DIR)
-        .output()?;
+    let output = verify_workspace()?;
 
     if output.status.success() {
         eprintln!(
-            "Verification successful for quest: {} - {} --- {}",
+            "Verification successful for quest: {} - {}",
             active_quest.title,
             active_quest.quest_id,
-            String::from_utf8_lossy(&output.stdout)
         );
+
+        let std_out = String::from_utf8_lossy(&output.stdout);
+
+        if !std_out.is_empty() {
+            eprintln!("Output from verification: {}", std_out);
+        } 
+
+        active_quest.completed = true;
+        save_active_json(&active_quest)?;
+        save_progress_to_profile_json(&active_quest)?;
     } else {
         eprintln!(
-            "Verification failed for quest:{} - {} --- {}",
+            "Verification failed for quest:{} - {}",
             active_quest.title,
             active_quest.quest_id,
-            String::from_utf8_lossy(&output.stderr)
         );
+
+        let std_err = String::from_utf8_lossy(&output.stderr);
+
+        if !std_err.is_empty() {
+            eprintln!("Output from verification: {}", std_err);
+        } 
     }
 
     Ok(())
 }
 
 fn cmd_profile() -> Result<()> {
-    eprintln!("profile: coming in Milestone 5");
+    
+    create_profile_json()?;
+
+    let profile = load_profile()?;
+
+    eprintln!("profile: completed_quest_ids: {:?}, xp: {}", profile.completed_quest_ids, profile.xp);
     Ok(())
 }
 

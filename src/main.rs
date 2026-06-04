@@ -2,15 +2,16 @@ mod cli;
 mod quest;
 mod utils;
 
+use crate::quest::game::{
+    create_active_json, create_cargo_toml, create_main_rs, create_profile_json,
+    create_workspace_dir, load_profile, load_quest_pack, save_active_json,
+    save_progress_to_profile_json,
+};
 use anyhow::{Ok, Result};
 use clap::Parser;
 use cli::{Cli, Commands};
-use quest::game::{WORKSPACE_DIR, load_active_quest, load_quest, verify_workspace};
+use quest::game::{WORKSPACE_DIR, load_active_quest, load_quest, verify_tests, verify_workspace};
 use std::path::Path;
-
-use crate::quest::game::{
-    create_active_json, save_active_json, save_progress_to_profile_json, create_profile_json, create_cargo_toml, create_main_rs, create_workspace_dir, load_quest_pack, load_profile,
-};
 
 fn main() -> Result<()> {
     // Parse CLI
@@ -93,55 +94,49 @@ fn cmd_start(quest_id: &str) -> Result<(), anyhow::Error> {
 }
 
 fn cmd_verify() -> Result<(), anyhow::Error> {
-    let Some(active_quest) = load_active_quest()? else {
+    let Some(mut active_quest) = load_active_quest()? else {
         eprintln!("No active quest found. Run cargo-quest start <quest_id> to start a quest");
         anyhow::bail!("No active quest found");
     };
 
-    let mut active_quest = active_quest;
+    if active_quest.completed {
+        eprintln!("Quest already completed: {}", active_quest.title);
+        return Ok(());
+    }
 
-    let output = verify_workspace()?;
-
-    if output.status.success() {
-        eprintln!(
-            "Verification successful for quest: {} - {}",
-            active_quest.title,
-            active_quest.quest_id,
-        );
-
-        let std_out = String::from_utf8_lossy(&output.stdout);
-
-        if !std_out.is_empty() {
-            eprintln!("Output from verification: {}", std_out);
-        } 
-
+    let profile = load_profile()?;
+    if profile.completed_quest_ids.contains(&active_quest.quest_id) {
+        eprintln!("Quest already completed: {}", active_quest.title);
         active_quest.completed = true;
         save_active_json(&active_quest)?;
         save_progress_to_profile_json(&active_quest)?;
-    } else {
-        eprintln!(
-            "Verification failed for quest:{} - {}",
-            active_quest.title,
-            active_quest.quest_id,
-        );
-
-        let std_err = String::from_utf8_lossy(&output.stderr);
-
-        if !std_err.is_empty() {
-            eprintln!("Output from verification: {}", std_err);
-        } 
+        return Ok(());
     }
-
+    // Verify workspace
+    verify_workspace()?;
+    // Verify tests
+    verify_tests(&active_quest)?;
+    // Save active quest
+    active_quest.completed = true;
+    save_active_json(&active_quest)?;
+    // Save progress to profile
+    save_progress_to_profile_json(&active_quest)?;
+    eprintln!(
+        "Verification successful for quest: {} - {}",
+        active_quest.title, active_quest.quest_id
+    );
     Ok(())
 }
 
 fn cmd_profile() -> Result<()> {
-    
     create_profile_json()?;
 
     let profile = load_profile()?;
 
-    eprintln!("profile: completed_quest_ids: {:?}, xp: {}", profile.completed_quest_ids, profile.xp);
+    eprintln!(
+        "profile: completed_quest_ids: {:?}, xp: {}",
+        profile.completed_quest_ids, profile.xp
+    );
     Ok(())
 }
 

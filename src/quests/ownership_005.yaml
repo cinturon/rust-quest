@@ -14,4 +14,10 @@ starter: |
       let quests = vec![101, 202, 303];
       // your code here
   }
-verify: "App Compiles"
+verify:
+  - kind: Compile
+    expected: "App Compiles"
+  - kind: Output
+    expected: "101"
+  - kind: Output
+    expected: "3"

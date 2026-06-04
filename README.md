@@ -4,7 +4,7 @@ Learn Rust through small coding **quests** in the terminal.
 
 ## Status
 
-Early development — [Milestone 1](https://linear.app/jibjack/issue/JIB-134) (quest format) in progress; [Milestone 0](https://linear.app/jibjack/issue/JIB-132) complete.
+Early development — CLI supports list, start, verify (compile + output checks), and profile. See the [development plan](.cursor/rules/CargoQuest_Development_Plan.md) for milestone details.
 
 ## Prerequisites
 
@@ -42,6 +42,8 @@ cargo-quest verify
 cargo-quest profile
 ```
 
+`verify` runs every step in the quest’s `verify` list (compile, then output checks). If your code compiles but prints the wrong text, verification fails with an expected-vs-actual message and you do not earn XP. XP and completion are recorded only when all steps pass.
+
 ## Quest YAML schema
 
 Quest **definitions** live under `src/quests/` as `{quest_id}.yaml` (for example `src/quests/variables_001.yaml`). They describe authored content—not the learner’s generated project (see [`CONTEXT.md`](./CONTEXT.md)).
@@ -53,8 +55,25 @@ Quest **definitions** live under `src/quests/` as `{quest_id}.yaml` (for example
 | `zone` | string | yes | Themed region (e.g. `Village of Variables`). |
 | `instructions` | string | yes | What the learner should do; use YAML `\|` for multiple lines. |
 | `xp` | integer | yes | Experience points awarded on first **completion**. |
-| `starter` | string | yes | Rust source template written into the **active workspace** when the quest is started (Milestone 3+). |
-| `verify` | string | yes | Verification label for now (e.g. `App Compiles`); structured checks come in later milestones. |
+| `starter` | string | yes | Rust source template written into the **active workspace** when the quest is started. |
+| `verify` | list | yes | Ordered verification steps run by `cargo-quest verify` (see below). |
+
+### `verify` steps
+
+Each item in `verify` is a test with:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `kind` | string | yes | How to check: `Compile`, `Output`, or `Behavior` (see table). |
+| `expected` | string | yes | Meaning depends on `kind` (label for compile, exact stdout for output). |
+
+| `kind` | What it does |
+|--------|----------------|
+| `Compile` | Runs `cargo check` in the active workspace. `expected` is a human-readable label (e.g. `App Compiles`); only success/failure matters. |
+| `Output` | Runs `cargo run`, trims stdout, and compares it to `expected`. Fails with an expected-vs-actual message on mismatch. |
+| `Behavior` | Runs `cargo test` and compares trimmed stdout to `expected`. Reserved for quests that ship tests in the workspace; most quests use `Compile` + `Output` only. |
+
+Steps run **in order**. Verification succeeds only when every step passes. XP is awarded once per quest id (see `profile`).
 
 ### Example
 
@@ -69,7 +88,11 @@ starter: |
   fn main() {
       // your code here
   }
-verify: "App Compiles"
+verify:
+  - kind: Compile
+    expected: "App Compiles"
+  - kind: Output
+    expected: "Hello, John!"
 ```
 
 Load and display one quest from the repo root:

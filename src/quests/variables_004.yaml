@@ -10,4 +10,8 @@ starter: |
   fn main() {
       // your code here
   }
-verify: "App Compiles"
+verify:
+  - kind: Compile
+    expected: "App Compiles"
+  - kind: Output
+    expected: "age: 30, bonus: 5"

@@ -6,7 +6,8 @@ use std::collections::HashSet;
 use std::fs::{File, create_dir_all, write};
 use std::io::BufReader;
 use std::path::PathBuf;
-use std::process::{Command, Output};
+use crate::quest::test::Test;
+use crate::quest::test::run_test;
 
 pub const WORKSPACE_DIR: &str = "./.cargo-quest/workspace";
 const QUESTS_DIR: &str = "./src/quests";
@@ -27,7 +28,7 @@ pub struct Quest {
     pub instructions: String,
     pub xp: i32,
     pub starter: String,
-    pub verify: String,
+    pub verify: Vec<Test>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -36,6 +37,7 @@ pub struct ActiveQuest {
     pub quest_id: String,
     pub xp: i32,
     pub completed: bool,
+    pub verify: Vec<Test>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -141,11 +143,14 @@ pub fn create_active_json(quest: &Quest) -> Result<(), anyhow::Error> {
         .ok_or(anyhow::anyhow!("Failed to get parent directory"))?
         .join("active.json");
 
+
+
     let active = ActiveQuest {
         title: sanitize_string(&quest.title),
         quest_id: quest.id.clone(),
         xp: quest.xp,
         completed: false,
+        verify: quest.verify.iter().map(|test| test.clone()).collect(),
     };
    
     write(&active_json_file, serde_json::to_string(&active)?)?;
@@ -222,7 +227,7 @@ pub fn load_profile() -> Result<Profile, anyhow::Error> {
 }
 
 
-pub fn verify_workspace() -> Result<Output, anyhow::Error> {
+pub fn verify_workspace() -> Result<(), anyhow::Error> {
     let workspace_dir = PathBuf::from(WORKSPACE_DIR);
     if !workspace_dir.exists() {
         return Err(anyhow::anyhow!("Workspace directory not found"));
@@ -251,15 +256,13 @@ pub fn verify_workspace() -> Result<Output, anyhow::Error> {
     if !active_json_file.exists() {
         return Err(anyhow::anyhow!("active.json file not found"));
     }
+    
+    Ok(())
+}
 
-    let output = Command::new("cargo")
-        .arg("check")
-        .current_dir(WORKSPACE_DIR)
-        .output()?;
-
-    if output.status.success() {
-        Ok(output)
-    } else {
-        Err(anyhow::anyhow!("Verification failed: {}", String::from_utf8_lossy(&output.stderr)))?
+pub fn verify_tests(active_quest: &ActiveQuest) -> Result<(), anyhow::Error> {
+    for test in active_quest.verify.iter() {
+        run_test(test)?;
     }
+    Ok(())
 }

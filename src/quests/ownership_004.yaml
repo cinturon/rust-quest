@@ -3,7 +3,7 @@ title: "Pass ownership to a function"
 zone: "Forest of Ownership"
 instructions: |
   Implement `take_and_greet` that accepts an owned `String`, prints `Hello, {name}!`, and does not return it.
-  In `main`, create `name` as a `String`, pass it to `take_and_greet`, and do not use `name` afterward.
+  In `main`, create `name` as a `String`, pass it to `take_and_greet`, and do not use `name` afterward. Say hello to the name John.
 xp: 18
 starter: |
   fn take_and_greet(name: String) {

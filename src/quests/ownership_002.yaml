@@ -14,10 +14,8 @@ starter: |
   fn main() {
       // your code here
   }
-verify: 
+verify:
   - kind: Compile
     expected: "App Compiles"
   - kind: Output
-    expected: "4"
-  - kind: Output
-    expected: "rust"
+    expected: "4\nrust"

@@ -2,7 +2,7 @@ id: variables_001
 title: "Hello, variables"
 zone: "Village of Variables"
 instructions: |
-  Declare a variable `name` and print a greeting.
+  Declare a variable `name` with value `"World"` and print a greeting.
 xp: 10
 starter: |
   fn main() {
@@ -12,4 +12,4 @@ verify:
   - kind: Compile
     expected: "App Compiles"
   - kind: Output
-    expected: "Hello, John!"
+    expected: "Hello, World!"

@@ -132,7 +132,22 @@ pub fn create_main_rs(quest: &Quest) -> Result<(), anyhow::Error> {
     let path = PathBuf::from(WORKSPACE_DIR).join("src");
 
     let main_rs_file = path.join("main.rs");
-    write(&main_rs_file, &quest.starter)?;
+
+    let mut content = String::new();
+    
+    content.push_str(&format!("// Quest: {}\n", quest.title));
+    content.push('\n');
+    content.push_str("// Instructions:\n");
+    content.push('\n');
+    
+    for line in quest.instructions.lines() {
+        content.push_str(&format!("// {}\n", line));
+    }
+    
+    content.push('\n');
+    content.push_str(&quest.starter);
+
+    write(&main_rs_file, content)?;
 
     Ok(())
 }

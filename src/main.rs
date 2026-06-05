@@ -42,13 +42,14 @@ fn cmd_list() -> Result<()> {
 
 fn cmd_start(quest_id: &str) -> Result<(), anyhow::Error> {
     let quest = load_quest(quest_id)?;
+    let profile = load_profile()?;
+    if profile.completed_quest_ids.contains(quest_id) {
+        eprintln!("Quest already completed: {}", quest.title);
+        return Ok(());
+    }
 
     match load_active_quest()? {
         Some(active_quest) => {
-            if active_quest.completed {
-                eprintln!("Quest already completed: {}", active_quest.title);
-                return Ok(());
-            }
             if active_quest.quest_id == quest_id {
                 eprintln!("Quest already active: {}", active_quest.title);
                 return Ok(());
@@ -59,6 +60,9 @@ fn cmd_start(quest_id: &str) -> Result<(), anyhow::Error> {
 
                 // Create active.json
                 create_active_json(&quest)?;
+
+                // Create main.rs with the quest starter code
+                create_main_rs(&quest)?;
             }
         }
         None => {

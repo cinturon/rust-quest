@@ -18,4 +18,4 @@ verify:
   - kind: Compile
     expected: "App Compiles"
   - kind: Output
-    expected: "1"
+    expected: "01"

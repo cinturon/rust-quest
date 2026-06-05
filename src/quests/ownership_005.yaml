@@ -18,6 +18,4 @@ verify:
   - kind: Compile
     expected: "App Compiles"
   - kind: Output
-    expected: "101"
-  - kind: Output
-    expected: "3"
+    expected: "101\n3"

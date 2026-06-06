@@ -6,6 +6,7 @@ instructions: |
   Move it into a second variable `banner` (do not clone).
   Print `banner` and leave `message` unused after the move.
 xp: 15
+victory_message: "The string moved once and never looked back. Quest accepted."
 starter: |
   fn main() {
       // your code here

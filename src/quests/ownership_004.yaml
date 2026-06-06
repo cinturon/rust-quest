@@ -5,6 +5,7 @@ instructions: |
   Implement `take_and_greet` that accepts an owned `String`, prints `Hello, {name}!`, and does not return it.
   In `main`, create `name` as a `String`, pass it to `take_and_greet`, and do not use `name` afterward. Say hello to the name John.
 xp: 18
+victory_message: "Ownership crossed the function boundary. Greeting delivered; the name was spent."
 starter: |
   fn take_and_greet(name: String) {
       // your code here

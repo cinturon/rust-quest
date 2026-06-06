@@ -1,6 +1,7 @@
 use serde::{Serialize, Deserialize};
 use std::process::Command;
 use crate::quest::game::WORKSPACE_DIR;
+use crate::quest::errors::print_error_hints;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub enum TestKind {
@@ -32,7 +33,8 @@ fn run_compile_test(_test: &Test) -> Result<(), anyhow::Error> {
     if output.status.success() {
         Ok(())
     } else {
-        Err(anyhow::anyhow!("Compile test failed: {}", String::from_utf8_lossy(&output.stderr)))
+        print_error_hints(String::from_utf8_lossy(&output.stderr).as_ref());
+        Err(anyhow::anyhow!("Compile test failed"))
     }
 }
 
@@ -43,7 +45,8 @@ fn run_output_test(test: &Test) -> Result<(), anyhow::Error> {
         .output()?;
 
     if !output.status.success() {
-        return Err(anyhow::anyhow!("Output test failed: {}", String::from_utf8_lossy(&output.stderr)));
+        print_error_hints(String::from_utf8_lossy(&output.stderr).as_ref());
+        return Err(anyhow::anyhow!("Output test failed"));
     }
 
     let actual = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -59,6 +62,11 @@ fn run_behavior_test(test: &Test) -> Result<(), anyhow::Error> {
         .arg("test")
         .current_dir(WORKSPACE_DIR)
         .output()?;
+
+    if !output.status.success() {
+        print_error_hints(String::from_utf8_lossy(&output.stderr).as_ref());
+        return Err(anyhow::anyhow!("Behavior test failed"));
+    }
 
     let actual = String::from_utf8_lossy(&output.stdout).trim().to_string();
     if actual != test.expected {

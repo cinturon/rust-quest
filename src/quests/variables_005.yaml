@@ -6,6 +6,7 @@ instructions: |
   Shadow it with a new `spaceship` holding `"orbiter"`.
   Print only the final value (`orbiter`).
 xp: 12
+victory_message: "Shadow cast, shadow lifted — orbiter flies on."
 starter: |
   fn main() {
       // your code here

@@ -4,6 +4,7 @@ zone: "Village of Variables"
 instructions: |
   Declare a variable `name` with value `"World"` and print a greeting.
 xp: 10
+victory_message: "The village welcomes your first binding — variables are yours to name."
 starter: |
   fn main() {
       // your code here

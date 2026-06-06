@@ -6,6 +6,7 @@ instructions: |
   Write a function `add_point` that takes `&mut String` and appends `"1"` (turn `"0"` into `"01"` for this exercise).
   Call it once and print the final `score`.
 xp: 15
+victory_message: "A mutable borrow shifted the score — still yours to hold."
 starter: |
   fn add_point(value: &mut String) {
       // your code here

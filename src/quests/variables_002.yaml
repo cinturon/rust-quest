@@ -5,6 +5,7 @@ instructions: |
   Create a mutable variable `count` starting at 0.
   Increment it twice, then print the final value (should be 2).
 xp: 10
+victory_message: "You bent a mutable value without breaking it. The counters approve."
 starter: |
   fn main() {
       // your code here

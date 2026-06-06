@@ -6,6 +6,7 @@ instructions: |
   Store a small bonus in `bonus` as a `u8`.
   Print both values on one line, e.g. `age: 30, bonus: 5`.
 xp: 12
+victory_message: "Types lined up — age and bonus reported without complaint."
 starter: |
   fn main() {
       // your code here

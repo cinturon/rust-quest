@@ -3,16 +3,17 @@ mod quest;
 mod utils;
 
 use crate::quest::game::{
-    create_active_json, create_cargo_toml, create_main_rs, create_profile_json,
-    create_workspace_dir, load_profile, load_quest_pack, save_active_json,
-    save_progress_to_profile_json,
+    create_active_json, create_cargo_toml, create_main_rs, create_workspace_dir, load_quest_pack,
+    save_active_json,
 };
 use anyhow::{Ok, Result};
 use clap::Parser;
 use cli::{Cli, Commands};
 use quest::game::{WORKSPACE_DIR, load_active_quest, load_quest, verify_tests, verify_workspace};
+use quest::profile::{
+    create_profile_json, load_profile, save_progress_to_profile_json, zone_progress, get_titles,
+};
 use std::path::Path;
-
 fn main() -> Result<()> {
     // Parse CLI
     let cli = Cli::parse();
@@ -125,22 +126,48 @@ fn cmd_verify() -> Result<(), anyhow::Error> {
     save_active_json(&active_quest)?;
     // Save progress to profile
     save_progress_to_profile_json(&active_quest)?;
-    eprintln!(
-        "Verification successful for quest: {} - {}",
-        active_quest.title, active_quest.quest_id
-    );
+    if !active_quest.victory_message.is_empty() {
+        eprintln!("{}", active_quest.victory_message);
+    } else {
+        eprintln!(
+            "Verification successful for quest: {} - {}",
+            active_quest.title, active_quest.quest_id
+        );
+    }
     Ok(())
 }
 
 fn cmd_profile() -> Result<()> {
-    create_profile_json()?;
 
-    let profile = load_profile()?;
+    let mut profile = load_profile()?;
+    zone_progress(&mut profile)?;
+    get_titles(&mut profile)?;
+
+    let quest_pack = load_quest_pack()?;
 
     eprintln!(
-        "profile: completed_quest_ids: {:?}, xp: {}",
-        profile.completed_quest_ids, profile.xp
+        "profile: xp: {}   |  level: {}",
+        profile.xp,
+        profile.level.as_str()
     );
+
+    eprintln!("--------------------------------");
+
+    for zone_info in profile.zone_progress.iter() {
+        eprintln!("Zone: {} - Completed: {} / Total: {}", zone_info.name, zone_info.completed_quests, zone_info.total_quests);
+    }
+
+    eprintln!("--------------------------------");
+    eprintln!("Completed Quests: {}", profile.completed_quest_ids.len());
+    eprintln!("Total Quests: {}", quest_pack.quests.len());
+    eprintln!(
+        "Progress: {}%",
+        (profile.completed_quest_ids.len() as f32 / quest_pack.quests.len() as f32) * 100.0
+    );
+    
+    eprintln!("Titles: {}", profile.titles.join(", "));
+    
+    
     Ok(())
 }
 

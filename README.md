@@ -56,6 +56,7 @@ Quest **definitions** live under `src/quests/` as `{quest_id}.yaml` (for example
 | `instructions` | string | yes | What the learner should do; use YAML `\|` for multiple lines. |
 | `xp` | integer | yes | Experience points awarded on first **completion**. |
 | `starter` | string | yes | Rust source template written into the **active workspace** when the quest is started. |
+| `victory_message` | string | yes | Flavor text printed on successful `verify` (zone-themed completion message). |
 | `verify` | list | yes | Ordered verification steps run by `cargo-quest verify` (see below). |
 
 ### `verify` steps
@@ -84,6 +85,7 @@ zone: "Village of Variables"
 instructions: |
   Declare a variable `name` and print a greeting.
 xp: 10
+victory_message: "The village welcomes your first binding — variables are yours to name."
 starter: |
   fn main() {
       // your code here

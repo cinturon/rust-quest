@@ -5,6 +5,7 @@ instructions: |
   Define a constant `MAX_HEALTH` with value 100 (use `const`, not `let`).
   Print it with a short message, e.g. `Max health: 100`.
 xp: 10
+victory_message: "MAX_HEALTH holds firm. Constants do not blink."
 starter: |
   fn main() {
       // your code here

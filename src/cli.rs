@@ -30,4 +30,6 @@ pub enum Commands {
         /// Quest id (e.g. variables_001)
         quest_id: String,
     },
+    /// Start the TUI
+    Tui,
 }

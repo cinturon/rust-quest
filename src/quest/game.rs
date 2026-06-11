@@ -20,7 +20,7 @@ pub struct QuestPack {
     pub quests: Vec<Quest>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Quest {
     pub id: String,
     pub title: String,

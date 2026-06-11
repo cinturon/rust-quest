@@ -1,11 +1,17 @@
+mod app;
 mod cli;
 mod quest;
+mod ui;
 mod utils;
+mod tui;
 
 use crate::quest::game::{
     create_active_json, create_cargo_toml, create_main_rs, create_workspace_dir, load_quest_pack,
     save_active_json,
 };
+
+use tui::run_tui;
+
 use anyhow::{Ok, Result};
 use clap::Parser;
 use cli::{Cli, Commands};
@@ -25,6 +31,7 @@ fn main() -> Result<()> {
         Commands::Verify => cmd_verify(),
         Commands::Profile => cmd_profile(),
         Commands::QuestDetails { quest_id } => cmd_quest_details(&quest_id),
+        Commands::Tui => cmd_tui(),
     }
 }
 
@@ -178,5 +185,15 @@ fn cmd_quest_details(quest_id: &str) -> Result<()> {
         "id: {}\ntitle: {}\ninstructions: {} ",
         quest.id, quest.title, quest.instructions
     );
+    Ok(())
+}
+
+fn cmd_tui() -> Result<()> {
+    eprintln!("Starting TUI... Press Ctrl+C to exit");
+    
+    run_tui()?;
+    
+    eprintln!("TUI exited");
+
     Ok(())
 }
